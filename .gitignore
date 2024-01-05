@@ -5,3 +5,5 @@ out
 gen
 
 __pycache__/
+
+*.db

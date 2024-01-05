@@ -23,3 +23,5 @@ llama_index
 html2image
 
 tabulate
+
+Peewee
