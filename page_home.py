@@ -10,10 +10,17 @@ from streamlit_option_menu import option_menu
 from webui.page_cg import page_cg
 from webui.page_code import page_code
 from webui.page_maven import page_maven
+from webui.page_openai import page_openai
 from webui.web_utils.api_client import ApiRequest
 from webui.web_utils.cg_api_client import create_cg_api_client
+from webui.web_utils.openai_client import OpenAiApiRequest
 
 VERSION = "0.0.1"
+
+
+@st.cache_resource(ttl=10800)  # 3小时过期
+def getOpenApiRequest():
+    return OpenAiApiRequest()
 
 
 @st.cache_resource(ttl=10800)  # 3小时过期
@@ -23,8 +30,8 @@ def getApiRequest():
 
 @st.cache_resource(ttl=10800)  # 3小时过期
 def getCgApiClient():
-    # return create_cg_api_client(is_mock=True)
     return create_cg_api_client()
+
 
 def get_start():
     st.set_page_config(
@@ -39,6 +46,10 @@ def get_start():
     )
 
     pages = {
+        "Openai Pilot": {
+            "icon": "chat",
+            "func": page_openai,
+        },
         "Code Pilot": {
             "icon": "chat",
             "func": page_code,
@@ -54,8 +65,8 @@ def get_start():
     }
 
     with st.sidebar:
-        # st.title('_Nice_ :blue[pilot] :sunglasses:')
-        st.title(':blue[HzBank Smart Pilot]')
+        st.title('_Nice_ :blue[pilot] :sunglasses:')
+        # st.title(':blue[HzBank Smart Pilot]')
         st.caption(
             f"""<p align="right">当前版本：{VERSION}</p>""",
             unsafe_allow_html=True,
@@ -74,7 +85,10 @@ def get_start():
 
     # according to selected_page
     if selected_page in pages and selected_page != 'Maven Pilot':
-        if selected_page == 'CG Pilot':
+        if selected_page == 'Openai Pilot':
+            api = getOpenApiRequest()
+            pages[selected_page]["func"](api)
+        elif selected_page == 'CG Pilot':
             cgApi = getCgApiClient()
             pages[selected_page]["func"](cgApi)
         else:

@@ -3,6 +3,8 @@
 # @Time 2023/11/2 S{TIME} 
 # @Name page_code. Py
 # @Author：jialtang
+
+
 import os
 from datetime import datetime
 from typing import List, Dict, Union
@@ -10,10 +12,10 @@ from typing import List, Dict, Union
 import streamlit as st
 from streamlit_chatbox import *
 
-from webui.web_utils.api_client import ApiRequest
+from webui.web_utils.openai_client import OpenAiApiRequest
 
-chat_box = ChatBox(
-    chat_name="cg_chat_bot",
+openai_chat_box = ChatBox(
+    chat_name="openai_chat_box",
     assistant_avatar=os.path.join(
         "./img",
         "chatchat_icon_hangzhibao.png"
@@ -25,14 +27,14 @@ chat_box = ChatBox(
 )
 
 
-def page_code(api: ApiRequest):
-    if not chat_box.chat_inited:
+def page_openai(api: OpenAiApiRequest):
+    if not openai_chat_box.chat_inited:
         # default_model = get_default_llm_model(api)[0]
         st.toast(
             f"欢迎使用! \n\n"
             # f"当前运行的模型`{default_model}`, 您可以开始提问了."
         )
-        chat_box.init_session()
+        openai_chat_box.init_session()
 
     with st.sidebar:
         def chat_model_selector():
@@ -69,48 +71,41 @@ def page_code(api: ApiRequest):
         columns = st.columns(2)
         export_button = columns[0]
         if columns[1].button("清空所有对话", use_container_width=True):
-            chat_box.reset_history()
+            openai_chat_box.reset_history()
             # st.experimental_rerun()
 
         export_button.download_button(
             "导出记录",
-            "".join(chat_box.export2md()),
+            "".join(openai_chat_box.export2md()),
             file_name=f"{now:%Y-%m-%d %H.%M}_对话记录.md",
             mime="text/markdown",
             use_container_width=True,
         )
 
     # Display chat messages from history on app rerun
-    chat_box.output_messages()
+    openai_chat_box.output_messages()
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
         history = get_messages_history(history_len)
-        chat_box.user_say(prompt)
-        chat_box.ai_say("正在思考...")
+        openai_chat_box.user_say(prompt)
+        openai_chat_box.ai_say("正在思考...")
 
         text = ""
-        # text: string
-        # history:[
-        #   {'role': 'user', 'content': 'hi'},
-        #   {'role': 'assistant', 'content': ''},]
-        r = api.chat_chat(prompt,
-                          history=history,
-                          temperature=temperature)
+        r = api.chat_completion_v1(prompt,
+                                   history=history,
+                                   model="gpt-3.5-turbo",
+                                   temperature=temperature,
+                                   as_json=True)
         for t in r:
             if error_msg := check_error_msg(t):  # check whether error occured
                 st.error(error_msg)
                 break
-            text += t
-            chat_box.update_msg(text)
-        chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
-        # print(f"<>text: {text}")
-
-        # text = f"321 {prompt} 123"
-        # chat_box.update_msg(text)
-        # chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
-
-    # print("Finish started.")
+            # 解析openai返回的json数据，获取其中返回msg
+            assistant_message = t.get("choices", [{}])[0].get("delta", {}).get("content", "")
+            text += assistant_message
+            openai_chat_box.update_msg(text)
+        openai_chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
@@ -127,7 +122,7 @@ def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
 
 def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
     '''
-    返回消息历史。
+    返回消息历史。符合OpenAi接口中的[Message{role, content}]
     content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
     '''
 
@@ -142,8 +137,8 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
             "content": "\n\n".join(content),
         }
 
-    return chat_box.filter_history(history_len=history_len, filter=filter)
+    return openai_chat_box.filter_history(history_len=history_len, filter=filter)
 
 
 if __name__ == "__main__":
-    page_code()
+    page_openai()
