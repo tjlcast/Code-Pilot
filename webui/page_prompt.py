@@ -1,0 +1,229 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+# @Time 2023/11/2 S{TIME} 
+# @Name page_code. Py
+# @Author：jialtang
+import json
+
+import streamlit as st
+from peewee import SqliteDatabase, Model, CharField, IntegerField
+from streamlit_tree_select import tree_select
+
+from webui.web_utils.openai_client import OpenAiApiRequest
+from webui.web_utils.template_engine import TemplateEngine
+
+db = SqliteDatabase('./mydatabase.db')
+
+
+@st.cache_resource(ttl=10800)  # 3小时过期
+def getDb():
+    db.connect(True)
+    return
+
+
+def page_prompt(api: OpenAiApiRequest):
+    # 查询用户
+    entity_dict = {}
+    prompt_dict = {}
+    with st.sidebar:
+        select = UserPrompt.select()
+        for i in range(select.count()):
+            entity_dict[select[i].id] = select[i]
+        dicts = select.dicts()
+        user_prompts = list(dicts)
+        node_map = {}
+        node_root = []
+        for user_prompt in user_prompts:
+            prompt_dict[user_prompt.get("id")] = user_prompt
+            node_map[user_prompt.get("id")] = {"label": user_prompt.get("name"), "value": user_prompt.get("id")}
+
+        for user_prompt in user_prompts:
+            id = user_prompt.get("id")
+            parent_id = user_prompt.get("parent_id", -1)
+            node = node_map.get(id)
+            if parent_id != -1:
+                parent_node = node_map.get(parent_id, {})
+                parent_node_children = parent_node.get("children", [])
+                parent_node_children.append(node)
+                parent_node["children"] = parent_node_children
+            else:
+                node.setdefault("children", [])
+                node_root.append(node)
+
+        st.write("你创建的提示词分组如下：")
+        return_select = tree_select(nodes=node_root, only_leaf_checkboxes=True, no_cascade=True, expand_on_click=True,
+                                    check_model="leaf")
+
+        dialogue_mode = st.selectbox("请选择操作模式：",
+                                     [
+                                         "创建提示词",
+                                         "删除分组",
+                                         "创建分组",
+                                     ],
+                                     index=0,
+                                     key="dialogue_mode",
+                                     # on_change=chat_model_selector,
+                                     )
+        if dialogue_mode == "删除分组":
+            group_ids = [x.get("value") for x in node_root]
+            delete_group_id = st.selectbox("选择一个分组", options=group_ids, format_func=lambda x: entity_dict.get(x).name)
+
+            def delete_group():
+                print("delete_group")
+                UserPrompt.delete().where(UserPrompt.parent_id == delete_group_id).execute()
+                UserPrompt.delete().where(UserPrompt.id == delete_group_id).execute()
+
+            st.button("删除", on_click=lambda: delete_group())
+
+        elif dialogue_mode == "创建提示词":
+            group_ids = [x.get("value") for x in node_root]
+            select_group_id = st.selectbox("选择一个分组", options=group_ids, format_func=lambda x: entity_dict.get(x).name)
+
+            prompt_name = st.text_input("请输入提示词名称")
+            st.button("创建", on_click=lambda: UserPrompt.create(name=prompt_name, parent_id=select_group_id, user_id=1,
+                                                               params="{}"))
+
+        elif dialogue_mode == "创建分组":
+            group_name = st.text_input("输入分组名称")
+            st.button("创建", on_click=lambda: UserPrompt.create(name=group_name, group_id=0, parent_id=-1, user_id=1))
+        st.write(return_select)
+    # end st.siderbar
+
+    for select_id_str in return_select.get("checked"):
+        with st.expander(entity_dict.get(int(select_id_str)).name):
+            select_id = int(select_id_str)
+            name = prompt_dict.get(select_id).get("name")
+            template = prompt_dict.get(select_id).get("template")
+            params = prompt_dict.get(select_id).get("params")
+
+            template_input = st.text_area(name + "--提示词模版", value=template, max_chars=None,
+                                          key=None,
+                                          help=None, on_change=None, args=None, kwargs=None)
+
+            cols_mid = st.columns(3)
+            # start extract button
+            if cols_mid[0].button(
+                    "提取参数",
+                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    use_container_width=True,
+                    type="primary",
+                    key="extract_params" + select_id_str
+            ):
+                params_extract = TemplateEngine(template_input).extract_params()
+                # params = params_extract
+                st.info(params_extract)
+            # end extract button
+            # start origin button
+            if cols_mid[1].button(
+                    "显示原值",
+                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    use_container_width=True,
+                    type="primary",
+                    key="show_origin" + select_id_str
+            ):
+                pass
+            # end origin button
+
+            try:
+                params_json = json.loads(params)
+                params = json.dumps(params_json, indent=4, ensure_ascii=False)
+            except Exception as e:
+                st.error("该params格式不对，不是json")
+            params_input = st.text_area(name + "--提示词参数", value=params, max_chars=None,
+                                        key=None,
+                                        help=None, on_change=None, args=None, kwargs=None)
+
+            cols = st.columns(3)
+
+            # start update button
+            if cols[0].button(
+                    "保存",
+                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    use_container_width=True,
+                    type="primary",
+                    key="save" + select_id_str,
+            ):
+                prompt_entity = entity_dict.get(select_id)
+                prompt_entity.template = template_input
+                prompt_entity.params = params_input
+                prompt_entity.save()
+
+            # end update button
+
+            # start delete button
+            if cols[1].button(
+                    "删除",
+                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    use_container_width=True,
+                    type="primary",
+                    key="delete" + select_id_str
+            ):
+                prompt_entity = entity_dict.get(select_id)
+                prompt_entity.delete_instance()
+                st.rerun()
+            # end delete button
+
+            # start execute button
+            cols1 = st.columns(3)
+            if cols1[0].button(
+                    "执行",
+                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    use_container_width=True,
+                    type="primary",
+                    key="execute" + select_id_str
+            ):
+                params_dict = json.loads(params_input)
+                tpl_rendered = TemplateEngine(template_input).render(params_dict)
+                r = api.chat_completion_v1(tpl_rendered,
+                                           history=[],
+                                           model="gpt-3.5-turbo",
+                                           temperature=0.7,
+                                           stream=False,
+                                           as_json=True)
+                for t in r:
+                    # 解析openai返回的json数据，获取其中返回msg
+                    print(t)
+                    try:
+                        assistant_message = t.get("choices", [{}])[0].get("message", {}).get("content", "")
+                        st.write("下面是LLM结论：")
+                        st.info(assistant_message)
+                    except Exception as e:
+                        st.error("LLM occurs error: " + t)
+            # end execute button
+            # start render button
+            if cols1[1].button(
+                    "渲染",
+                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    use_container_width=True,
+                    type="primary",
+                    key="render" + select_id_str
+            ):
+                params_dict = json.loads(params_input)
+                tpl_rendered = TemplateEngine(template_input).render(params_dict)
+                print(tpl_rendered)
+                st.write("下面是渲染结果：")
+                st.info(tpl_rendered)
+            # end render button
+        st.divider()
+
+
+class BaseModel(Model):
+    class Meta:
+        database = db
+
+
+class UserPrompt(BaseModel):
+    id = IntegerField(unique=True, column_name="id")
+    user_id = IntegerField(column_name="user_id")
+    name = CharField(column_name="name")
+    template = CharField(column_name="template")
+    params = CharField(column_name="params")
+    parent_id = IntegerField(column_name="parent_id")
+
+    class Meta:
+        table_name = 'bs_user_prompt'  # 这里可以自定义表名
+
+
+if __name__ == "__main__":
+    db = getDb()
+    print("finish")

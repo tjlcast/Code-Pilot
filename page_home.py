@@ -7,6 +7,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 
+from webui.page_prompt import page_prompt
 from webui.page_cg import page_cg
 from webui.page_code import page_code
 from webui.page_maven import page_maven
@@ -50,6 +51,10 @@ def get_start():
             "icon": "chat",
             "func": page_openai,
         },
+        "Prompt Pilot": {
+            "icon": "hdd-stack",
+            "func": page_prompt,
+        },
         "Code Pilot": {
             "icon": "chat",
             "func": page_code,
@@ -86,6 +91,9 @@ def get_start():
     # according to selected_page
     if selected_page in pages and selected_page != 'Maven Pilot':
         if selected_page == 'Openai Pilot':
+            api = getOpenApiRequest()
+            pages[selected_page]["func"](api)
+        elif selected_page == 'Prompt Pilot':
             api = getOpenApiRequest()
             pages[selected_page]["func"](api)
         elif selected_page == 'CG Pilot':

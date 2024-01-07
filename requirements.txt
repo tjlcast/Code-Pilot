@@ -7,6 +7,7 @@ streamlit-chatbox==1.1.10
 streamlit-aggrid>=0.3.4.post3
 streamlit_chat
 streamlit_modal
+streamlit-tree-select
 
 gradio
 
