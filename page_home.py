@@ -47,26 +47,14 @@ def get_start():
     )
 
     pages = {
-        "Openai Pilot": {
+        "Chat Pilot": {
             "icon": "chat",
             "func": page_openai,
         },
         "Prompt Pilot": {
             "icon": "hdd-stack",
             "func": page_prompt,
-        },
-        "Code Pilot": {
-            "icon": "chat",
-            "func": page_code,
-        },
-        "CG Pilot": {
-            "icon": "chat",
-            "func": page_cg,
-        },
-        "Maven Pilot": {
-            "icon": "hdd-stack",
-            "func": page_maven,
-        },
+        }
     }
 
     with st.sidebar:
@@ -96,12 +84,8 @@ def get_start():
         elif selected_page == 'Prompt Pilot':
             api = getOpenApiRequest()
             pages[selected_page]["func"](api)
-        elif selected_page == 'CG Pilot':
-            cgApi = getCgApiClient()
-            pages[selected_page]["func"](cgApi)
         else:
-            api = getApiRequest()
-            pages[selected_page]["func"](api)
+            pass
     else:
         st.toast(f"{selected_page} 还在施工中...尽情期待")
 
