@@ -26,3 +26,4 @@ html2image
 tabulate
 
 Peewee
+streamlit_authenticator==0.1.5

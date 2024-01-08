@@ -5,13 +5,11 @@
 # @Author：jialtang
 
 import streamlit as st
+import streamlit_authenticator as stauth
 from streamlit_option_menu import option_menu
 
-from webui.page_prompt import page_prompt
-from webui.page_cg import page_cg
-from webui.page_code import page_code
-from webui.page_maven import page_maven
 from webui.page_openai import page_openai
+from webui.page_prompt import page_prompt, check_user, register_user
 from webui.web_utils.api_client import ApiRequest
 from webui.web_utils.cg_api_client import create_cg_api_client
 from webui.web_utils.openai_client import OpenAiApiRequest
@@ -35,17 +33,6 @@ def getCgApiClient():
 
 
 def get_start():
-    st.set_page_config(
-        "Pilots WebUI",
-        # os.path.join("img", "chatchat_icon_blue_square_v2.png"),
-        initial_sidebar_state="expanded",
-        menu_items={
-            'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
-            'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
-            'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
-        }
-    )
-
     pages = {
         "Chat Pilot": {
             "icon": "chat",
@@ -78,7 +65,7 @@ def get_start():
 
     # according to selected_page
     if selected_page in pages and selected_page != 'Maven Pilot':
-        if selected_page == 'Openai Pilot':
+        if selected_page == 'Chat Pilot':
             api = getOpenApiRequest()
             pages[selected_page]["func"](api)
         elif selected_page == 'Prompt Pilot':
@@ -90,5 +77,52 @@ def get_start():
         st.toast(f"{selected_page} 还在施工中...尽情期待")
 
 
+def login():
+    username = st.text_input("用户名", key="user_name")
+    password = st.text_input("密码", type="password", key="password")
+    submit_button = st.button("登录", key="login")
+    if submit_button:
+        # 验证用户名和密码
+        user = check_user(username, password)
+        if user:
+            # 登录成功
+            st.session_state.login_id = user.id
+            st.session_state.login_name = user.name
+            st.toast("欢迎， {}!".format(st.session_state.login_name))
+            st.rerun()
+        else:
+            # 登录失败
+            st.error("用户名或密码错误，请重试。")
+
+
+# 注册页面
+def register():
+    with st.expander("注册"):
+        username = st.text_input("用户名")
+        password = st.text_input("密码", type="password")
+        submit_button = st.button("注册", key="register")
+        if submit_button:
+            # 将新用户添加到数据库
+            register_user(username, password)
+            st.write("注册成功！")
+
+
 if __name__ == "__main__":
-    get_start()
+    st.set_page_config(
+        "Pilots WebUI",
+        # os.path.join("img", "chatchat_icon_blue_square_v2.png"),
+        initial_sidebar_state="expanded",
+        menu_items={
+            'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
+            'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
+            'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
+        }
+    )
+
+    if not st.session_state.get("login_id"):
+        login()
+        register()
+    else:
+        # 用户已登录，显示应用内容
+        print("get_start")
+        get_start()

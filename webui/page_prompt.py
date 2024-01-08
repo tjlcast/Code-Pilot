@@ -224,6 +224,28 @@ class UserPrompt(BaseModel):
         table_name = 'bs_user_prompt'  # 这里可以自定义表名
 
 
+class User(BaseModel):
+    id = IntegerField(unique=True, column_name="id")
+    name = CharField(column_name="user_name")
+    email = CharField(column_name="email")
+    passwd = CharField(column_name="passwd")
+
+    class Meta:
+        table_name = 'bs_user'  # 这里可以自定义表名
+
+
+def check_user(user_name, passwd):
+    first = User.select().where(User.name == user_name, User.passwd == passwd).first()
+    return first;
+
+
+def register_user(user_name, passwd):
+    user = User(name=user_name, passwd=passwd, email="")
+    user.save()
+
+
 if __name__ == "__main__":
     db = getDb()
+    # register_user("tjl", "123")
+    check_user("tjl", "123")
     print("finish")

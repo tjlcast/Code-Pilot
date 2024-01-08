@@ -28,6 +28,7 @@ openai_chat_box = ChatBox(
 
 
 def page_openai(api: OpenAiApiRequest):
+    print("page_openai")
     if not openai_chat_box.chat_inited:
         # default_model = get_default_llm_model(api)[0]
         st.toast(
