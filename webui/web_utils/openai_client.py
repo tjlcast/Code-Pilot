@@ -26,7 +26,7 @@ class OpenAiApiRequest:
 
     def __init__(
             self,
-            base_url: str = "https://api.openai.com",
+            base_url: str = os.environ.get("OPENAI_API_ADDR", "https://api.openai.com"),
             # httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
             timeout: float = 300.0,
     ):
@@ -34,7 +34,7 @@ class OpenAiApiRequest:
         self.timeout = timeout
         self._use_async = False
         self._client = None
-        self.auth = ("Authorization", os.environ["OPENAI_API_KEY"])
+        self.auth = ("Authorization", os.environ.get("OPENAI_API_KEY", ""))
 
     @property
     def client(self):
@@ -279,7 +279,8 @@ class OpenAiApiRequest:
         """
         data = json.loads(data_str)
         stream = data.get("stream", True)
-        response = self.post("/v1/chat/completions", json=data, stream=stream, auth=self.auth, **kwargs)
+        url = os.environ.get("OPENAI_API_URL", "/v1/chat/completions")
+        response = self.post(url, json=data, stream=stream, auth=self.auth, **kwargs)
         return self._httpx_stream2generator(response, stream, as_json)
 
     def chat_completion_v1(self,
@@ -302,7 +303,8 @@ class OpenAiApiRequest:
             "stream": stream,
             "messages": messages,
         }
-        response = self.post("/v1/chat/completions", json=data, stream=stream, auth=self.auth, **kwargs)
+        url = os.environ.get("OPENAI_API_URL", "/v1/chat/completions")
+        response = self.post(url, json=data, stream=stream, auth=self.auth, **kwargs)
         return self._httpx_stream2generator(response, stream, as_json)
 
     def chat_chat(
@@ -401,7 +403,7 @@ if __name__ == "__main__":
     api = OpenAiApiRequest(base_url=url)
     # response = api.get("/genspace/")
     # response_json = api.get_as_json("/genspace/")
-    auth = ("Authorization", os.environ["OPENAI_API_KEY"])
+    # auth = ("Authorization", os.environ["OPENAI_API_KEY"])
     data_str = """
                 {
                   "model": "gpt-3.5-turbo",

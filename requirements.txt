@@ -1,29 +1,21 @@
-python-dotenv
+python-dotenv==1.0.0
 
-streamlit>=1.26.0
-streamlit-option-menu>=0.3.6
-streamlit-antd-components>=0.1.11
+streamlit==1.28.0
+streamlit-option-menu==0.3.6
+streamlit-antd-components==0.2.3
 streamlit-chatbox==1.1.10
-streamlit-aggrid>=0.3.4.post3
-streamlit_chat
-streamlit_modal
-streamlit-tree-select
+streamlit-aggrid==0.3.4.post3
+streamlit_chat==0.1.1
+streamlit_modal==0.1.0
+streamlit-tree-select==0.0.5
 
-gradio
+tabulate==0.9.0
 
-langchain>=0.0.319
-openai
-tiktoken
-faiss-cpu
-huggingface_hub
-sentence-transformers
+httpx==0.25.0
+
+pydantic==2.4.2
+pydantic_core==2.10.1
 
 
-youtube_transcript_api
-llama_index
-html2image
-
-tabulate
-
-Peewee
+peewee==3.17.0
 streamlit_authenticator==0.1.5

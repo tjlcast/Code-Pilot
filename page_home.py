@@ -5,7 +5,6 @@
 # @Author：jialtang
 
 import streamlit as st
-import streamlit_authenticator as stauth
 from streamlit_option_menu import option_menu
 
 from webui.page_openai import page_openai
@@ -106,6 +105,11 @@ def register():
             register_user(username, password)
             st.write("注册成功！")
 
+
+from dotenv import load_dotenv
+
+# 加载.env文件
+load_dotenv()
 
 if __name__ == "__main__":
     st.set_page_config(

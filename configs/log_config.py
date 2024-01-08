@@ -7,11 +7,8 @@
 import logging
 import os
 
-import langchain
-
 # 是否显示详细日志
 log_verbose = False
-langchain.verbose = False
 
 # 日志格式
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
