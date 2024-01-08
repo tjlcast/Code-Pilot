@@ -23,10 +23,12 @@ def getDb():
 
 def page_prompt(api: OpenAiApiRequest):
     # 查询用户
+    user_id = st.session_state.get("login_id")
+    user_name = st.session_state.get("login_name")
     entity_dict = {}
     prompt_dict = {}
     with st.sidebar:
-        select = UserPrompt.select()
+        select = UserPrompt.select().where(UserPrompt.user_id == user_id)
         for i in range(select.count()):
             entity_dict[select[i].id] = select[i]
         dicts = select.dicts()
