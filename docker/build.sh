@@ -13,7 +13,7 @@ PROJECT_PATH=$(dirname $PWD)
 PROJECT_NAME=$(basename $(dirname $PWD))
 
 rm -rf ./$PROJECT_NAME
-rsync -av --exclude='venv' --exclude='.git' --exclude='.idea' --exclude='.env' $PROJECT_PATH ./
+rsync -av --exclude='venv' --exclude='.git' --exclude='.idea' --exclude='.env' --exclude='docker' $PROJECT_PATH ./
 
 docker build --no-cache -t code-pilot:0.0.1 .
 

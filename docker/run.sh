@@ -3,6 +3,7 @@
 docker rm -f code-pilot
 
 PROJECT_PATH=$(dirname $PWD)
+echo $PROJECT_PATH
 
 docker run -itd \
   --name code-pilot \
