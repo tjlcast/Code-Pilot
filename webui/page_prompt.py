@@ -106,6 +106,12 @@ def page_prompt(api: OpenAiApiRequest):
             template = prompt_dict.get(select_id).get("template")
             params = prompt_dict.get(select_id).get("params")
 
+            template_flag_select_str = st.selectbox("选项占位符", ["{}","$"],
+                                                index=0,
+                                                key=select_id_str+"template_flag_select"
+                                                )
+            template_flag_select = 0 if template_flag_select_str == "{}" else 1
+
             template_input = st.text_area(name + "--提示词模版", value=template, max_chars=None,
                                           key=select_id_str + "--提示词模版",
                                           help=None, on_change=None, args=None, kwargs=None)
@@ -119,7 +125,7 @@ def page_prompt(api: OpenAiApiRequest):
                     type="primary",
                     key="extract_params" + select_id_str
             ):
-                params_extract = TemplateEngine(template_input).extract_params()
+                params_extract = TemplateEngine(template_input, template_flag_select).extract_params()
                 # params = params_extract
                 st.info(params_extract)
             # end extract button
@@ -184,7 +190,7 @@ def page_prompt(api: OpenAiApiRequest):
                     key="execute" + select_id_str
             ):
                 params_dict = json.loads(params_input)
-                tpl_rendered = TemplateEngine(template_input).render(params_dict)
+                tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
                 r = api.chat_completion_v1(tpl_rendered,
                                            history=[],
                                            model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
@@ -216,7 +222,7 @@ def page_prompt(api: OpenAiApiRequest):
                     key="render" + select_id_str
             ):
                 params_dict = json.loads(params_input)
-                tpl_rendered = TemplateEngine(template_input).render(params_dict)
+                tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
                 print(tpl_rendered)
                 st.write("下面是渲染结果：")
                 st.info(tpl_rendered)
