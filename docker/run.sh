@@ -10,5 +10,3 @@ docker run -itd \
   -v $PROJECT_PATH/mydatabase.db:/app/Code-Pilot/mydatabase.db \
   -p 9966:9966 \
   code-pilot:0.0.1
-
-
