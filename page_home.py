@@ -127,5 +127,4 @@ if __name__ == "__main__":
         register()
     else:
         # 用户已登录，显示应用内容
-        print("get_start")
         get_start()
