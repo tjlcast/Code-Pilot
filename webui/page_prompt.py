@@ -5,7 +5,7 @@
 # @Author：jialtang
 
 import json
-
+import os
 import pandas as pd
 import streamlit as st
 from peewee import SqliteDatabase, Model, CharField, IntegerField, TextField, DateTimeField, ForeignKeyField
@@ -187,7 +187,7 @@ def page_prompt(api: OpenAiApiRequest):
                 tpl_rendered = TemplateEngine(template_input).render(params_dict)
                 r = api.chat_completion_v1(tpl_rendered,
                                            history=[],
-                                           model="gpt-3.5-turbo",
+                                           model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
                                            temperature=0.7,
                                            stream=False,
                                            as_json=True)

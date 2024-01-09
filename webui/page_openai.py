@@ -94,7 +94,7 @@ def page_openai(api: OpenAiApiRequest):
         text = ""
         r = api.chat_completion_v1(prompt,
                                    history=history,
-                                   model="gpt-3.5-turbo",
+                                   model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
                                    temperature=temperature,
                                    as_json=True)
         for t in r:

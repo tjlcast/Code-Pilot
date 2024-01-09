@@ -26,7 +26,7 @@ class OpenAiApiRequest:
 
     def __init__(
             self,
-            base_url: str = os.environ.get("OPENAI_API_ADDR", "https://api.openai.com"),
+            base_url: str,
             # httpx 请求默认超时时间（秒）。如果加载模型或对话较慢，出现超时错误，可以适当加大该值。
             timeout: float = 300.0,
     ):
@@ -286,7 +286,7 @@ class OpenAiApiRequest:
     def chat_completion_v1(self,
                            query: str,
                            history: List,
-                           model: str = "gpt-3.5-turbo",
+                           model: str,
                            temperature: float = 0.7,
                            stream: bool = True,
                            as_json: bool = False,

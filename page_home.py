@@ -5,6 +5,7 @@
 # @Author：jialtang
 
 import streamlit as st
+import os
 from streamlit_option_menu import option_menu
 
 from webui.page_openai import page_openai
@@ -18,7 +19,7 @@ VERSION = "0.0.1"
 
 @st.cache_resource(ttl=10800)  # 3小时过期
 def getOpenApiRequest():
-    return OpenAiApiRequest()
+    return OpenAiApiRequest(base_url=os.environ.get("OPENAI_API_ADDR", "https://api.openai.com"))
 
 
 @st.cache_resource(ttl=10800)  # 3小时过期
