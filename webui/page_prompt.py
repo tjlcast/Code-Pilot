@@ -52,7 +52,7 @@ def page_prompt(api: OpenAiApiRequest):
                 node.setdefault("children", [])
                 node_root.append(node)
 
-        st.write("你创建的提示词分组如下：")
+        st.write("您的提示词分组如下：")
         return_select = tree_select(nodes=node_root, only_leaf_checkboxes=True, no_cascade=True, expand_on_click=True,
                                     check_model="leaf")
 
@@ -71,9 +71,9 @@ def page_prompt(api: OpenAiApiRequest):
             delete_group_id = st.selectbox("选择一个分组", options=group_ids, format_func=lambda x: entity_dict.get(x).name)
 
             def delete_group():
-                print("delete_group")
                 UserPrompt.delete().where(UserPrompt.parent_id == delete_group_id).execute()
                 UserPrompt.delete().where(UserPrompt.id == delete_group_id).execute()
+                st.toast("成功删除!")
 
             st.button("删除", on_click=lambda: delete_group())
 
@@ -82,8 +82,11 @@ def page_prompt(api: OpenAiApiRequest):
             select_group_id = st.selectbox("选择一个分组", options=group_ids, format_func=lambda x: entity_dict.get(x).name)
 
             prompt_name = st.text_input("请输入提示词名称")
-            st.button("创建", on_click=lambda: UserPrompt.create(name=prompt_name, parent_id=select_group_id, user_id=1,
-                                                               params="{}"))
+            button_val = st.button("创建")
+            if button_val:
+                UserPrompt.create(name=prompt_name, parent_id=select_group_id,
+                                  user_id=1, params="{}")
+                st.toast("成功创建提示词：" + prompt_name)
 
         elif dialogue_mode == "创建分组":
             group_name = st.text_input("输入分组名称")
@@ -99,7 +102,7 @@ def page_prompt(api: OpenAiApiRequest):
             params = prompt_dict.get(select_id).get("params")
 
             template_input = st.text_area(name + "--提示词模版", value=template, max_chars=None,
-                                          key=None,
+                                          key=select_id_str+"--提示词模版",
                                           help=None, on_change=None, args=None, kwargs=None)
 
             cols_mid = st.columns(3)
@@ -132,7 +135,7 @@ def page_prompt(api: OpenAiApiRequest):
             except Exception as e:
                 st.error("该params格式不对，不是json")
             params_input = st.text_area(name + "--提示词参数", value=params, max_chars=None,
-                                        key=None,
+                                        key=select_id_str + "--提示词参数",
                                         help=None, on_change=None, args=None, kwargs=None)
 
             cols = st.columns(3)
@@ -149,6 +152,7 @@ def page_prompt(api: OpenAiApiRequest):
                 prompt_entity.template = template_input
                 prompt_entity.params = params_input
                 prompt_entity.save()
+                st.toast("保存成功！")
 
             # end update button
 
