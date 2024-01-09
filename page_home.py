@@ -45,7 +45,6 @@ def get_start():
 
     with st.sidebar:
         st.title('_Nice_ :blue[pilot] :sunglasses:')
-        # st.title(':blue[HzBank Smart Pilot]')
         st.caption(
             f"""<p align="right">当前版本：{VERSION}</p>""",
             unsafe_allow_html=True,

@@ -3,16 +3,18 @@
 # @Time 2023/11/2 S{TIME} 
 # @Name page_code. Py
 # @Author：jialtang
+
 import json
 
+import pandas as pd
 import streamlit as st
-from peewee import SqliteDatabase, Model, CharField, IntegerField
+from peewee import SqliteDatabase, Model, CharField, IntegerField, TextField, DateTimeField, ForeignKeyField
 from streamlit_tree_select import tree_select
 
 from webui.web_utils.openai_client import OpenAiApiRequest
 from webui.web_utils.template_engine import TemplateEngine
 
-db = SqliteDatabase('./mydatabase.db')
+db = SqliteDatabase('./mydatabase.db', pragmas={'foreign_keys': 1})
 
 
 @st.cache_resource(ttl=10800)  # 3小时过期
@@ -73,6 +75,7 @@ def page_prompt(api: OpenAiApiRequest):
             def delete_group():
                 UserPrompt.delete().where(UserPrompt.parent_id == delete_group_id).execute()
                 UserPrompt.delete().where(UserPrompt.id == delete_group_id).execute()
+                # BsUserPromptExecuteHistory.delete().where(BsUserPromptExecuteHistory.prompt_id == delete_group_id).execute()
                 st.toast("成功删除!")
 
             st.button("删除", on_click=lambda: delete_group())
@@ -90,7 +93,9 @@ def page_prompt(api: OpenAiApiRequest):
 
         elif dialogue_mode == "创建分组":
             group_name = st.text_input("输入分组名称")
-            st.button("创建", on_click=lambda: UserPrompt.create(name=group_name, group_id=0, parent_id=-1, user_id=1))
+            if st.button("创建"):
+                UserPrompt.create(name=group_name, group_id=0, parent_id=-1, user_id=1)
+                st.toast("成功创建分组：" + group_name)
         st.write(return_select)
     # end st.siderbar
 
@@ -102,7 +107,7 @@ def page_prompt(api: OpenAiApiRequest):
             params = prompt_dict.get(select_id).get("params")
 
             template_input = st.text_area(name + "--提示词模版", value=template, max_chars=None,
-                                          key=select_id_str+"--提示词模版",
+                                          key=select_id_str + "--提示词模版",
                                           help=None, on_change=None, args=None, kwargs=None)
 
             cols_mid = st.columns(3)
@@ -193,8 +198,14 @@ def page_prompt(api: OpenAiApiRequest):
                         assistant_message = t.get("choices", [{}])[0].get("message", {}).get("content", "")
                         st.write("下面是LLM结论：")
                         st.info(assistant_message)
+                        # 记录执行结果
+                        st.button("记录执行结果", on_click=lambda: create_prompt_history(user_id=st.session_state.login_id,
+                                                                                   user_name=st.session_state.login_name,
+                                                                                   prompt_id=select_id,
+                                                                                   ask=tpl_rendered,
+                                                                                   reply=assistant_message))
                     except Exception as e:
-                        st.error("LLM occurs error: " + t)
+                        st.error("LLM occurs error: " + str(e) + " reply: " + json.dumps(t))
             # end execute button
             # start render button
             if cols1[1].button(
@@ -210,6 +221,9 @@ def page_prompt(api: OpenAiApiRequest):
                 st.write("下面是渲染结果：")
                 st.info(tpl_rendered)
             # end render button
+        st.divider()
+        with st.expander(entity_dict.get(int(select_id_str)).name + "--history"):
+            prompt_execute_history(st.session_state.login_id, select_id)
         st.divider()
 
 
@@ -242,12 +256,57 @@ class User(BaseModel):
 
 def check_user(user_name, passwd):
     first = User.select().where(User.name == user_name, User.passwd == passwd).first()
-    return first;
+    return first
 
 
 def register_user(user_name, passwd):
     user = User(name=user_name, passwd=passwd, email="")
     user.save()
+
+
+def prompt_execute_history(user_id: int, prompt_id: int):
+    history = list_prompt_execute_history(user_id, prompt_id)
+    l = list(history.dicts())
+    df = pd.DataFrame(l, columns=["ask", "reply", "create_time"])
+    st.table(df)
+
+
+class BsUserPromptExecuteHistory(BaseModel):
+    id = IntegerField(unique=True, column_name="id")
+    prompt_id = ForeignKeyField(UserPrompt, column_name="prompt_id", on_delete='cascade')
+    ask = TextField(column_name="ask")
+    reply = TextField(column_name="reply")
+    model = TextField(column_name="model")
+    url = TextField(column_name="url")
+    request = TextField(column_name="request")
+    response = TextField(column_name="response")
+    create_time = DateTimeField(column_name="create_time")
+    user_id = IntegerField(column_name="user_id")
+    user_name = TextField(column_name="user_name")
+
+    class Meta:
+        table_name = 'bs_user_prompt_execute_history'  # 这里可以自定义表名
+
+
+def list_prompt_execute_history(user_id: int, prompt_id: int):
+    return BsUserPromptExecuteHistory.select().where(BsUserPromptExecuteHistory.user_id == user_id,
+                                                     BsUserPromptExecuteHistory.prompt_id == prompt_id)
+
+
+def create_prompt_history(user_id: int, prompt_id: int, ask: str, reply: str, model: str = "", url: str = "",
+                          request: str = "",
+                          response: str = "", user_name: str = ""):
+    BsUserPromptExecuteHistory.create(
+        user_id=user_id,
+        user_name=user_name,
+        prompt_id=prompt_id,
+        ask=ask,
+        reply=reply,
+        model=model,
+        url=url,
+        request=request,
+        response=response,
+    )
 
 
 if __name__ == "__main__":
