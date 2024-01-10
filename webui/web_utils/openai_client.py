@@ -302,6 +302,7 @@ class OpenAiApiRequest:
             "model": model,
             "stream": stream,
             "messages": messages,
+            "max_tokens": 2048,
         }
         url = os.environ.get("OPENAI_API_URL", "/v1/chat/completions")
         response = self.post(url, json=data, stream=stream, auth=self.auth, **kwargs)

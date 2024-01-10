@@ -194,7 +194,7 @@ def page_prompt(api: OpenAiApiRequest):
                 r = api.chat_completion_v1(tpl_rendered,
                                            history=[],
                                            model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
-                                           temperature=0.7,
+                                           temperature=0.0,
                                            stream=False,
                                            as_json=True)
                 for t in r:
