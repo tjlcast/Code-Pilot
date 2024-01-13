@@ -6,6 +6,7 @@
 
 import json
 import os
+
 import pandas as pd
 import streamlit as st
 from peewee import SqliteDatabase, Model, CharField, IntegerField, TextField, DateTimeField, ForeignKeyField
@@ -66,7 +67,6 @@ def page_prompt(api: OpenAiApiRequest):
                                      ],
                                      index=0,
                                      key="dialogue_mode",
-                                     # on_change=chat_model_selector,
                                      )
         if dialogue_mode == "删除分组":
             group_ids = [x.get("value") for x in node_root]
@@ -75,7 +75,7 @@ def page_prompt(api: OpenAiApiRequest):
             def delete_group():
                 UserPrompt.delete().where(UserPrompt.parent_id == delete_group_id).execute()
                 UserPrompt.delete().where(UserPrompt.id == delete_group_id).execute()
-                # BsUserPromptExecuteHistory.delete().where(BsUserPromptExecuteHistory.prompt_id == delete_group_id).execute()
+                # 这里通过在表格中设置级联删除，当UserPrompt删除时，会自动删除属于该提示词的历史记录
                 st.toast("成功删除!")
 
             st.button("删除", on_click=lambda: delete_group())
@@ -87,7 +87,7 @@ def page_prompt(api: OpenAiApiRequest):
             prompt_name = st.text_input("请输入提示词名称")
             button_val = st.button("创建")
             if button_val:
-                UserPrompt.create(name=prompt_name, parent_id=select_group_id,
+                UserPrompt.create(name=prompt_name, parent_id=select_group_id, template="",
                                   user_id=1, params="{}")
                 st.toast("成功创建提示词：" + prompt_name)
 
@@ -105,72 +105,49 @@ def page_prompt(api: OpenAiApiRequest):
             name = prompt_dict.get(select_id).get("name")
             template = prompt_dict.get(select_id).get("template")
             params = prompt_dict.get(select_id).get("params")
+            params = json.loads(params)
 
-            template_flag_select_str = st.selectbox("选项占位符", ["{}","$"],
-                                                index=0,
-                                                key=select_id_str+"template_flag_select"
-                                                )
+            template_flag_select_str = st.selectbox("选项占位符", ["{}", "$"],
+                                                    index=0,
+                                                    key=select_id_str + "template_flag_select"
+                                                    )
             template_flag_select = 0 if template_flag_select_str == "{}" else 1
 
             template_input = st.text_area(name + "--提示词模版", value=template, max_chars=None,
                                           key=select_id_str + "--提示词模版",
                                           help=None, on_change=None, args=None, kwargs=None)
 
-            cols_mid = st.columns(3)
-            # start extract button
-            if cols_mid[0].button(
-                    "提取参数",
-                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
-                    use_container_width=True,
-                    type="primary",
-                    key="extract_params" + select_id_str
-            ):
-                params_extract = TemplateEngine(template_input, template_flag_select).extract_params()
-                # params = params_extract
-                st.info(params_extract)
-            # end extract button
-            # start origin button
-            if cols_mid[1].button(
-                    "显示原值",
-                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
-                    use_container_width=True,
-                    type="primary",
-                    key="show_origin" + select_id_str
-            ):
-                pass
-            # end origin button
+            params_extract = TemplateEngine(template_input, template_flag_select).extract_params()
+            params_extract = json.loads(params_extract)
 
-            try:
-                params_json = json.loads(params)
-                params = json.dumps(params_json, indent=4, ensure_ascii=False)
-            except Exception as e:
-                st.error("该params格式不对，不是json")
-            params_input = st.text_area(name + "--提示词参数", value=params, max_chars=None,
-                                        key=select_id_str + "--提示词参数",
-                                        help=None, on_change=None, args=None, kwargs=None)
+            for key, val in params_extract.items():
+                save_val = params.get(key, "")
+                input_val = st.text_area(key + "_--提示词参数", value=save_val, max_chars=None,
+                                         key=select_id_str + "_" + key + "--提示词参数",
+                                         help=None, on_change=None, args=None, kwargs=None)
+                params_extract[key] = input_val
 
             cols = st.columns(3)
 
             # start update button
             if cols[0].button(
                     "保存",
-                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    help="保存当前的提示词模版和提示词参数",
                     use_container_width=True,
                     type="primary",
                     key="save" + select_id_str,
             ):
                 prompt_entity = entity_dict.get(select_id)
                 prompt_entity.template = template_input
-                prompt_entity.params = params_input
+                prompt_entity.params = json.dumps(params_extract, ensure_ascii=False)
                 prompt_entity.save()
                 st.toast("保存成功！")
-
             # end update button
 
             # start delete button
             if cols[1].button(
                     "删除",
-                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
+                    help="删除本提示词以及其历史执行记录",
                     use_container_width=True,
                     type="primary",
                     key="delete" + select_id_str
@@ -184,12 +161,11 @@ def page_prompt(api: OpenAiApiRequest):
             cols1 = st.columns(3)
             if cols1[0].button(
                     "执行",
-                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
                     use_container_width=True,
                     type="primary",
                     key="execute" + select_id_str
             ):
-                params_dict = json.loads(params_input)
+                params_dict = params_extract
                 tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
                 r = api.chat_completion_v1(tpl_rendered,
                                            history=[],
@@ -205,30 +181,22 @@ def page_prompt(api: OpenAiApiRequest):
                         st.write("下面是LLM结论：")
                         st.info(assistant_message)
                         # 记录执行结果
-                        st.button("记录执行结果", on_click=lambda: create_prompt_history(user_id=st.session_state.login_id,
-                                                                                   user_name=st.session_state.login_name,
-                                                                                   prompt_id=select_id,
-                                                                                   ask=tpl_rendered,
-                                                                                   reply=assistant_message))
                     except Exception as e:
                         st.error("LLM occurs error: " + str(e) + " reply: " + json.dumps(t))
-            # end execute button
-            # start render button
-            if cols1[1].button(
-                    "渲染",
-                    # help="无需上传文件，通过其它方式将文档拷贝到对应知识库content目录下，点击本按钮即可重建知识库。",
-                    use_container_width=True,
-                    type="primary",
-                    key="render" + select_id_str
-            ):
-                params_dict = json.loads(params_input)
-                tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
-                print(tpl_rendered)
-                st.write("下面是渲染结果：")
-                st.info(tpl_rendered)
-            # end render button
+
+                def mark_history(arg_select_id_str):
+                    select_id_cur = int(arg_select_id_str)
+                    create_prompt_history(user_id=st.session_state.login_id,
+                                          user_name=st.session_state.login_name,
+                                          prompt_id=select_id_cur, ask=tpl_rendered,
+                                          reply=assistant_message)
+
+                st.button("记录执行结果", key="mark_prompt_history_" + select_id_str, on_click=mark_history, args=(select_id_str, ))
+
         st.divider()
         with st.expander(entity_dict.get(int(select_id_str)).name + "--history"):
+            if st.button("删除全部记录", key="delete_all_prompt_history_" + select_id_str):
+                delete_all_prompt_history(st.session_state.login_id, select_id)
             prompt_execute_history(st.session_state.login_id, select_id)
         st.divider()
 
@@ -268,6 +236,11 @@ def check_user(user_name, passwd):
 def register_user(user_name, passwd):
     user = User(name=user_name, passwd=passwd, email="")
     user.save()
+
+
+def delete_all_prompt_history(user_id: int, prompt_id: int):
+    BsUserPromptExecuteHistory.delete().where(BsUserPromptExecuteHistory.user_id == user_id,
+                                              prompt_id == prompt_id).execute()
 
 
 def prompt_execute_history(user_id: int, prompt_id: int):
