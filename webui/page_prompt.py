@@ -15,13 +15,15 @@ from streamlit_tree_select import tree_select
 from webui.web_utils.openai_client import OpenAiApiRequest
 from webui.web_utils.template_engine import TemplateEngine
 
-db = SqliteDatabase('./mydatabase.db', pragmas={'foreign_keys': 1})
-
 
 @st.cache_resource(ttl=10800)  # 3小时过期
 def getDb():
+    db = SqliteDatabase('./mydatabase.db', pragmas={'foreign_keys': 1})
     db.connect(True)
-    return
+    return db
+
+
+db = getDb()
 
 
 def page_prompt(api: OpenAiApiRequest):

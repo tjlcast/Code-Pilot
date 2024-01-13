@@ -6,15 +6,29 @@
 
 import streamlit as st
 import os
-from streamlit_option_menu import option_menu
 
+"""
+这个配置需要在最开始就进行配置
+"""
+VERSION = "0.0.1"
+st.set_page_config(
+    "Pilots WebUI",
+    os.path.join("img", "chatchat_icon_hangxiaobao.png"),
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
+        'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
+        'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
+    }
+)
+
+
+from streamlit_option_menu import option_menu
 from webui.page_openai import page_openai
 from webui.page_prompt import page_prompt, check_user, register_user
 from webui.web_utils.api_client import ApiRequest
 from webui.web_utils.cg_api_client import create_cg_api_client
 from webui.web_utils.openai_client import OpenAiApiRequest
-
-VERSION = "0.0.1"
 
 
 @st.cache_resource(ttl=10800)  # 3小时过期
@@ -112,16 +126,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 if __name__ == "__main__":
-    st.set_page_config(
-        "Pilots WebUI",
-        # os.path.join("img", "chatchat_icon_blue_square_v2.png"),
-        initial_sidebar_state="expanded",
-        menu_items={
-            'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
-            'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
-            'About': f"""欢迎使用 Langchain-Chatchat WebUI {VERSION}！"""
-        }
-    )
 
     if not st.session_state.get("login_id"):
         login()
