@@ -96,7 +96,6 @@ def page_prompt(api: OpenAiApiRequest):
             if st.button("创建"):
                 UserPrompt.create(name=group_name, group_id=0, parent_id=-1, user_id=1)
                 st.toast("成功创建分组：" + group_name)
-        st.write(return_select)
     # end st.siderbar
 
     for select_id_str in return_select.get("checked"):
@@ -165,33 +164,35 @@ def page_prompt(api: OpenAiApiRequest):
                     type="primary",
                     key="execute" + select_id_str
             ):
-                params_dict = params_extract
-                tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
-                r = api.chat_completion_v1(tpl_rendered,
-                                           history=[],
-                                           model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
-                                           temperature=0.0,
-                                           stream=False,
-                                           as_json=True)
-                for t in r:
-                    # 解析openai返回的json数据，获取其中返回msg
-                    print(t)
-                    try:
-                        assistant_message = t.get("choices", [{}])[0].get("message", {}).get("content", "")
-                        st.write("下面是LLM结论：")
-                        st.info(assistant_message)
-                        # 记录执行结果
-                    except Exception as e:
-                        st.error("LLM occurs error: " + str(e) + " reply: " + json.dumps(t))
+                with st.spinner("Waiting for pilot thinking"):
+                    params_dict = params_extract
+                    tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
+                    r = api.chat_completion_v1(tpl_rendered,
+                                               history=[],
+                                               model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
+                                               temperature=0.0,
+                                               stream=False,
+                                               as_json=True)
+                    for t in r:
+                        # 解析openai返回的json数据，获取其中返回msg
+                        print(t)
+                        try:
+                            assistant_message = t.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            st.write("下面是LLM结论：")
+                            st.info(assistant_message)
+                            # 记录执行结果
+                        except Exception as e:
+                            st.error("LLM occurs error: " + str(e) + " reply: " + json.dumps(t))
 
-                def mark_history(arg_select_id_str):
-                    select_id_cur = int(arg_select_id_str)
-                    create_prompt_history(user_id=st.session_state.login_id,
-                                          user_name=st.session_state.login_name,
-                                          prompt_id=select_id_cur, ask=tpl_rendered,
-                                          reply=assistant_message)
+                    def mark_history(arg_select_id_str):
+                        select_id_cur = int(arg_select_id_str)
+                        create_prompt_history(user_id=st.session_state.login_id,
+                                              user_name=st.session_state.login_name,
+                                              prompt_id=select_id_cur, ask=tpl_rendered,
+                                              reply=assistant_message)
 
-                st.button("记录执行结果", key="mark_prompt_history_" + select_id_str, on_click=mark_history, args=(select_id_str, ))
+                    st.button("记录执行结果", key="mark_prompt_history_" + select_id_str, on_click=mark_history,
+                              args=(select_id_str,))
 
         st.divider()
         with st.expander(entity_dict.get(int(select_id_str)).name + "--history"):
