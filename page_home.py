@@ -7,9 +7,7 @@
 import streamlit as st
 import os
 
-"""
-这个配置需要在最开始就进行配置
-"""
+# 这个配置需要在最开始就进行配置
 VERSION = "0.0.1"
 st.set_page_config(
     "Pilots WebUI",
