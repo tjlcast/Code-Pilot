@@ -159,6 +159,7 @@ def page_prompt(api: OpenAiApiRequest):
             # end delete button
 
             # start execute button
+            is_markdown = st.checkbox("是否输出markdown格式", key="is_markdown" + select_id_str)
             cols1 = st.columns(3)
             if cols1[0].button(
                     "执行",
@@ -169,6 +170,10 @@ def page_prompt(api: OpenAiApiRequest):
                 with st.spinner("Waiting for pilot thinking"):
                     params_dict = params_extract
                     tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
+
+                    if is_markdown:
+                        tpl_rendered = tpl_rendered + "\n\n" + "输出描述和Markdown代码块"
+
                     r = api.chat_completion_v1(tpl_rendered,
                                                history=[],
                                                model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
