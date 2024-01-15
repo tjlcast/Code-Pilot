@@ -90,13 +90,13 @@ def page_prompt(api: OpenAiApiRequest):
             button_val = st.button("创建")
             if button_val:
                 UserPrompt.create(name=prompt_name, parent_id=select_group_id, template="",
-                                  user_id=1, params="{}")
+                                  user_id=user_id, params="{}")
                 st.toast("成功创建提示词：" + prompt_name)
 
         elif dialogue_mode == "创建分组":
             group_name = st.text_input("输入分组名称")
             if st.button("创建"):
-                UserPrompt.create(name=group_name, group_id=0, parent_id=-1, user_id=1)
+                UserPrompt.create(name=group_name, user_id=user_id, parent_id=-1)
                 st.toast("成功创建分组：" + group_name)
     # end st.siderbar
 
@@ -255,7 +255,9 @@ def prompt_execute_history(user_id: int, prompt_id: int):
     history = list_prompt_execute_history(user_id, prompt_id)
     l = list(history.dicts())
     df = pd.DataFrame(l, columns=["ask", "reply", "create_time"])
-    st.table(df)
+    md = df.to_html()
+    st.markdown(md, unsafe_allow_html=True)
+    # st.table(df)
 
 
 class BsUserPromptExecuteHistory(BaseModel):
