@@ -279,7 +279,7 @@ class BsUserPromptExecuteHistory(BaseModel):
 
 def list_prompt_execute_history(user_id: int, prompt_id: int):
     return BsUserPromptExecuteHistory.select().where(BsUserPromptExecuteHistory.user_id == user_id,
-                                                     BsUserPromptExecuteHistory.prompt_id == prompt_id)
+                                                     BsUserPromptExecuteHistory.prompt_id == prompt_id).order_by(BsUserPromptExecuteHistory.create_time.desc())
 
 
 def create_prompt_history(user_id: int, prompt_id: int, ask: str, reply: str, model: str = "", url: str = "",
