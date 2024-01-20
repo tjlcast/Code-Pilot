@@ -24,6 +24,7 @@ st.set_page_config(
 from streamlit_option_menu import option_menu
 from webui.page_openai import page_openai
 from webui.page_prompt import page_prompt, check_user, register_user
+from cg.webui import page_cg
 from webui.web_utils.api_client import ApiRequest
 from webui.web_utils.cg_api_client import create_cg_api_client
 from webui.web_utils.openai_client import OpenAiApiRequest
@@ -53,6 +54,10 @@ def get_start():
         "Prompt Pilot": {
             "icon": "hdd-stack",
             "func": page_prompt,
+        },
+        "CG Pilot": {
+            "icon": "hdd-stack",
+            "func": page_cg,
         }
     }
 
@@ -83,7 +88,8 @@ def get_start():
             api = getOpenApiRequest()
             pages[selected_page]["func"](api)
         else:
-            pass
+            api = getOpenApiRequest()
+            pages[selected_page]["func"](api)
     else:
         st.toast(f"{selected_page} 还在施工中...尽情期待")
 
