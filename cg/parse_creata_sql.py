@@ -26,7 +26,7 @@ def parse_create_table(sql_statement):
         columns = re.finditer(column_pattern, columns_str)
 
         table_structure = {
-            "table_name": table_name,
+            "name": table_name,
             "columns": []
         }
 
