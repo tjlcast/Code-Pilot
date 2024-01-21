@@ -23,8 +23,8 @@ create table bs_user
 
 
 def page_cg(api: Any):
-    template_input = st.text_area("create sql", max_chars=None, height=300, help=input_help_msg,
-                                  value="create table bs_user ( id INTEGER not null, user_name VARCHAR(255) not null, email VARCHAR(255) not null, passwd TEXT not null, );",
+    template_input = st.text_area("create sql", max_chars=None, height=300, help="Please input create sql",
+                                  value=input_help_msg,
                                   on_change=None, args=None, kwargs=None)
 
     options = st.multiselect(
