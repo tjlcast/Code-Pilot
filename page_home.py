@@ -56,7 +56,7 @@ def get_start():
             "func": page_prompt,
         },
         "CG Pilot": {
-            "icon": "hdd-stack",
+            "icon": "app-indicator",
             "func": page_cg,
         }
     }
