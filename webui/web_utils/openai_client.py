@@ -34,7 +34,11 @@ class OpenAiApiRequest:
         self.timeout = timeout
         self._use_async = False
         self._client = None
-        self.auth = ("Authorization", os.environ.get("OPENAI_API_KEY", ""))
+        key = os.environ.get("OPENAI_API_KEY", "")
+        self.headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {key}'}
+        # self.auth = ("Authorization", key)
 
     @property
     def client(self):
@@ -280,7 +284,7 @@ class OpenAiApiRequest:
         data = json.loads(data_str)
         stream = data.get("stream", True)
         url = os.environ.get("OPENAI_API_URL", "/v1/chat/completions")
-        response = self.post(url, json=data, stream=stream, auth=self.auth, **kwargs)
+        response = self.post(url, json=data, stream=stream, header=self.headers, **kwargs)
         return self._httpx_stream2generator(response, stream, as_json)
 
     def chat_completion_v1(self,
@@ -305,7 +309,7 @@ class OpenAiApiRequest:
             "max_tokens": 2048,
         }
         url = os.environ.get("OPENAI_API_URL", "/v1/chat/completions")
-        response = self.post(url, json=data, stream=stream, auth=self.auth, **kwargs)
+        response = self.post(url, json=data, stream=stream, headers=self.headers, **kwargs)
         return self._httpx_stream2generator(response, stream, as_json)
 
     def chat_chat(

@@ -1,4 +1,6 @@
 .env
+.env.openai
+.env.deepseek
 .idea
 *.iml
 out
