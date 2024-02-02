@@ -199,9 +199,6 @@ def page_prompt(api: OpenAiApiRequest):
                     params_dict = params_extract
                     tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
 
-                    if is_markdown:
-                        tpl_rendered = tpl_rendered + "\n\n" + "输出描述和Markdown代码块"
-
                     r = api.chat_completion_v1(tpl_rendered,
                                                history=[],
                                                model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
@@ -214,6 +211,8 @@ def page_prompt(api: OpenAiApiRequest):
                         try:
                             assistant_message = t.get("choices", [{}])[0].get("message", {}).get("content", "")
                             st.write("下面是LLM结论：")
+                            if is_markdown:
+                                assistant_message = "```\n\n" + assistant_message + "\n\n```"
                             st.info(assistant_message)
                             # 记录执行结果
                         except Exception as e:
