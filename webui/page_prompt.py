@@ -9,6 +9,9 @@ import os
 
 import pandas as pd
 import streamlit as st
+from webui.crypt.crypt import KEY
+from webui.crypt.crypt import encrypt_integer
+from webui.crypt.crypt import decrypt_string
 from peewee import SqliteDatabase, Model, CharField, IntegerField, TextField, DateTimeField, ForeignKeyField
 from streamlit_tree_select import tree_select
 
@@ -87,11 +90,23 @@ def page_prompt(api: OpenAiApiRequest):
             select_group_id = st.selectbox("选择一个分组", options=group_ids, format_func=lambda x: entity_dict.get(x).name)
 
             prompt_name = st.text_input("请输入提示词名称")
+            public_name = st.text_input("请输入分享码")
             button_val = st.button("创建")
             if button_val:
-                UserPrompt.create(name=prompt_name, parent_id=select_group_id, template="",
+                if public_name != "":
+                    id = decrypt_string(public_name, KEY)
+                    where = UserPrompt.select().where(UserPrompt.id == id).first()
+                    if where.is_public==0:
+                        st.error("该分享码已经失效！")
+                        return
+                    prompt_name = prompt_name if prompt_name!="" else where.name
+                    UserPrompt.create(name=prompt_name, parent_id=select_group_id, template=where.template,
+                                      user_id=user_id, params=where.params)
+                    st.toast("成功创建提示词：" + prompt_name)
+                else:
+                    UserPrompt.create(name=prompt_name, parent_id=select_group_id, template="",
                                   user_id=user_id, params="{}")
-                st.toast("成功创建提示词：" + prompt_name)
+                    st.toast("成功创建提示词：" + prompt_name)
 
         elif dialogue_mode == "创建分组":
             group_name = st.text_input("输入分组名称")
@@ -106,6 +121,8 @@ def page_prompt(api: OpenAiApiRequest):
             name = prompt_dict.get(select_id).get("name")
             template = prompt_dict.get(select_id).get("template")
             params = prompt_dict.get(select_id).get("params")
+            is_public = prompt_dict.get(select_id).get("is_public")
+            is_public = False if is_public == 0 else True
             params = json.loads(params)
 
             template_flag_select_str = st.selectbox("选项占位符", ["{}", "$"],
@@ -157,6 +174,17 @@ def page_prompt(api: OpenAiApiRequest):
                 prompt_entity.delete_instance()
                 st.rerun()
             # end delete button
+
+            is_public_cols = st.columns(2)
+            def change_public(args):
+                prompt_entity = entity_dict.get(select_id)
+                if st.session_state[args]!=prompt_entity.is_public:
+                    prompt_entity.is_public = st.session_state[args]
+                    prompt_entity.save()
+            is_public_input = is_public_cols[0].checkbox("是否公开", key="is_public" + select_id_str, value=is_public, on_change=change_public, args=("is_public" + select_id_str,))
+            if is_public_input:
+                is_public_cols[1].markdown("```\n" + encrypt_integer(select_id, KEY) + "\n```")
+
 
             # start execute button
             is_markdown = st.checkbox("是否输出markdown格式", key="is_markdown" + select_id_str)
@@ -221,6 +249,7 @@ class UserPrompt(BaseModel):
     template = CharField(column_name="template")
     params = CharField(column_name="params")
     parent_id = IntegerField(column_name="parent_id")
+    is_public = IntegerField(column_name="is_public")
 
     class Meta:
         table_name = 'bs_user_prompt'  # 这里可以自定义表名
