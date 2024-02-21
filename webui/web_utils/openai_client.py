@@ -294,11 +294,14 @@ class OpenAiApiRequest:
                            temperature: float = 0.7,
                            stream: bool = True,
                            as_json: bool = False,
+                           system_message: str = None,
                            **kwargs):
         """
         根据async、stream、json请求接口并处理返回结果
         """
         messages = []
+        if system_message!=None and system_message.strip()!="": 
+            messages.append({"role": "system", "content": system_message})
         messages.extend(history)
         messages.append({"role": "user", "content": query})
         data = {

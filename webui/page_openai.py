@@ -66,6 +66,9 @@ def page_openai(api: OpenAiApiRequest):
         # default history is 3
         history_len = st.number_input("历史对话轮数：", 0, 20, 3)
 
+        # System prompt
+        system_message = st.text_input("System Message", help="请输入大模型的SystemMessage")
+
     now = datetime.now()
     with st.sidebar:
         columns = st.columns(2)
@@ -96,7 +99,8 @@ def page_openai(api: OpenAiApiRequest):
                                    history=history,
                                    model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
                                    temperature=temperature,
-                                   as_json=True)
+                                   as_json=True,
+                                   system_message=system_message)
         for t in r:
             if error_msg := check_error_msg(t):  # check whether error occured
                 st.error(error_msg)
