@@ -9,3 +9,4 @@ gen
 __pycache__/
 
 *.tar.gz
+nohup.out
