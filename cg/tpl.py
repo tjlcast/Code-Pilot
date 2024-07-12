@@ -5,6 +5,23 @@
 # @Author: jialtang
 
 
+
+# 生成代码的依赖
+mavenPom = """
+<dependency>
+    <groupId>io.springfox</groupId>
+    <artifactId>springfox-swagger2</artifactId>
+    <version>2.9.2</version>
+</dependency>
+<dependency>
+    <groupId>io.springfox</groupId>
+    <artifactId>springfox-swagger-ui</artifactId>
+    <version>2.9.2</version>
+    <scope>runtime</scope>
+</dependency>
+"""
+
+
 # 示例JSON数据
 entity = """
 public class {{ ctx.entity.name }} {
@@ -45,7 +62,7 @@ public class {{ ctx.entity.name }}Dto {
     public static {{ctx.entity.name}} convertEntity() {
         {{ctx.entity.name}} {{ctx.table.name|lower_camel_case}} = new {{ctx.entity.name}}();
         {% for field in ctx.entity.fields %}
-        {{ctx.table.name|lower_camel_case}}.set{{field.name|upper_camel_case}}(dto.get{{field.name|upper_camel_case}}());
+        {{ctx.table.name|lower_camel_case}}.set{{field.name|upper_camel_case}}(this.get{{field.name|upper_camel_case}}());
         {% endfor %}
         return {{ctx.table.name|lower_camel_case}};
     }
