@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERSION=${1:-0.0.1}
+
 # 检查当前目录的名称是否为'docker'，否则直接退出
 current_dir=$(basename $(pwd))
 if [ "$current_dir" != "docker" ]; then
@@ -15,6 +17,6 @@ PROJECT_NAME=$(basename $(dirname $PWD))
 rm -rf ./$PROJECT_NAME
 rsync -av --exclude='venv' --exclude='.git' --exclude='.idea' --exclude='.env' --exclude='docker' $PROJECT_PATH ./
 
-docker build --no-cache -t code-pilot:0.0.1 .
+docker build --no-cache -t code-pilot:$VERSION .
 
 rm -rf ./$PROJECT_NAME
