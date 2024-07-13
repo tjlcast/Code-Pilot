@@ -32,6 +32,9 @@ def page_cg(api: Any):
         tpls.keys(),
         tpls.keys())
     
+    with st.expander(label="applicationYml"):
+        st.markdown(utils.file_in_markdown_code(applicationYml))
+    
     with st.expander(label="maven"):
         st.markdown(utils.file_in_markdown_code(mavenPom))
 
