@@ -1,0 +1,24 @@
+{   
+    "name": "Code-Pilot",
+    "host": "121.40.102.152",
+    "username": "xxx",
+    "password": "xxx",
+    "protocol": "sftp",
+    "port": 22,
+    "remotePath": "/home/jialtang/apps/code-pilot/Code-Pilot",
+    "ignore": [
+        ".vscode",
+        ".git",
+        ".DS_Store",
+        ".env",
+        "mydatabase.db"
+    ],
+    "uploadOnSave": true,
+    "useTempFile": false,
+    "openSsh": false,
+    "watcher": {
+        "files": "**/*",
+        "autoUpload": true,
+        "autoDelete": true
+    }
+}

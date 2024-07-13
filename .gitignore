@@ -10,3 +10,5 @@ __pycache__/
 
 *.tar.gz
 nohup.out
+
+.vscode/sftp.json
