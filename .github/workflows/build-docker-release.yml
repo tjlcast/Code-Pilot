@@ -1,0 +1,58 @@
+name: Maven Build and Release
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Extract tag name
+      id: extract_tag_name
+      run: echo "::set-output name=tag_name::$(echo ${{ github.ref }} | sed 's|.*/v||')"
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset-jar
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./docker/run.sh
+        asset_name: run.sh
+        asset_content_type: application/text
+    
+    - name: Build Docker Image
+      run: |
+        docker version
+        cd ./docker && ./build.sh && docker save code-pilot:0.0.1 > Docker-code-pilot-${{ steps.extract_tag_name.outputs.tag_name }}.tar.gz
+        ls -al
+    
+    - name: Upload Release Asset
+      id: upload-release-asset-docker
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: docker/Docker-code-pilot-${{ steps.extract_tag_name.outputs.tag_name }}.tar.gz
+        asset_name: Docker-code-pilot-${{ steps.extract_tag_name.outputs.tag_name }}.tar.gz
+        asset_content_type: application/x-tar
