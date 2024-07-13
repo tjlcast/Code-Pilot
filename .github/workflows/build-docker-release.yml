@@ -43,7 +43,7 @@ jobs:
     - name: Build Docker Image
       run: |
         docker version
-        cd ./docker && ./build.sh ${{ steps.extract_tag_name.outputs.tag_name }} && docker save code-pilot:0.0.1 > Docker-code-pilot-${{ steps.extract_tag_name.outputs.tag_name }}.tar.gz
+        cd ./docker && ./build.sh ${{ steps.extract_tag_name.outputs.tag_name }} && docker save code-pilot:${{ steps.extract_tag_name.outputs.tag_name }} > Docker-code-pilot-${{ steps.extract_tag_name.outputs.tag_name }}.tar.gz
         ls -al
     
     - name: Upload Release Asset
