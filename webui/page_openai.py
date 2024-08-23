@@ -107,7 +107,8 @@ def page_openai(api: OpenAiApiRequest):
                 break
             # 解析openai返回的json数据，获取其中返回msg
             assistant_message = t.get("choices", [{}])[0].get("delta", {}).get("content", "")
-            text += assistant_message
+            if assistant_message is not None:
+                text += assistant_message
             openai_chat_box.update_msg(text)
         openai_chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
 
