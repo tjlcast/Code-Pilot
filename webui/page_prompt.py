@@ -189,6 +189,17 @@ def page_prompt(api: OpenAiApiRequest):
             # start execute button
             is_markdown = st.checkbox("是否输出markdown格式", key="is_markdown" + select_id_str)
             cols1 = st.columns(3)
+            with cols1[1]:
+                def mark_history(arg_select_id_str):
+                        select_id_cur = int(arg_select_id_str)
+                        params_dict = params_extract
+                        tpl_rendered = TemplateEngine(template_input, template_flag_select).render(params_dict)
+                        create_prompt_history(user_id=st.session_state.login_id,
+                                              user_name=st.session_state.login_name,
+                                              prompt_id=select_id_cur, ask=tpl_rendered,
+                                              reply="Empty...")
+                st.button("记录提示词渲染结果", key="mark_input_rendered_history_" + select_id_str, on_click=mark_history,
+                              args=(select_id_str,))
             if cols1[0].button(
                     "执行",
                     use_container_width=True,
