@@ -9,7 +9,6 @@ import os
 
 import pandas as pd
 import streamlit as st
-import pyperclip
 from webui.crypt.crypt import KEY
 from webui.crypt.crypt import encrypt_integer
 from webui.crypt.crypt import decrypt_string
@@ -228,34 +227,6 @@ def page_prompt(api: OpenAiApiRequest):
 
                     st.button("记录执行结果", key="mark_prompt_history_" + select_id_str, on_click=mark_history,
                               args=(select_id_str,))
-            if cols1[1].button(
-                    "复制",
-                    use_container_width=True,
-                    type="primary",
-                    key="copy" + select_id_str
-            ):
-                # 要复制的文本
-                params_dict = params_extract
-                text_to_copy = TemplateEngine(template_input, template_flag_select).render(params_dict)
-                pyperclip.copy(text_to_copy)
-                st.toast("复制成功")
-                # streamlit_clipboard(text_to_copy,  button_label="Copy Text")
-                # copy_to_clipboard(text_to_copy, select_id_str)
-                # 创建一个按钮，点击后将文本复制到剪贴板
-                # st.components.v1.html(f"""
-                #     <button id="copyButton" class="css-1cpxqw2 edgvbvh10" style="width: 100%; height: 38.5px; border: none; border-radius: 4px; background-color: #0083b8; color: white; font-weight: 600; cursor: pointer;">
-                #         复制到剪贴板
-                #     </button>
-                #     <input type="text" value="{text_to_copy}" id="copyText" style="position: absolute; left: -1000px;">
-                #     <script>
-                #     document.getElementById("copyButton").onclick = function() {{
-                #         var copyText = document.getElementById("copyText");
-                #         copyText.select();
-                #         document.execCommand("copy");
-                #         alert("已复制到剪贴板: " + copyText.value);
-                #     }};
-                #     </script>
-                #     """, height=60)
                 
         st.divider()
         with st.expander(entity_dict.get(int(select_id_str)).name + "--history"):
