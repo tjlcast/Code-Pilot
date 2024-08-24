@@ -129,11 +129,20 @@ from dotenv import load_dotenv
 # 加载.env文件
 load_dotenv(override=True)
 
-if __name__ == "__main__":
+from my_component import st_ace
+content = st_ace()
 
-    if not st.session_state.get("login_id"):
-        login()
-        register()
-    else:
-        # 用户已登录，显示应用内容
-        get_start()
+if __name__ == "__main__":
+    
+    content
+    # clicked_message = my_button()
+    # if clicked_message:
+    #     st.write("Button clicked!")
+
+
+    # if not st.session_state.get("login_id"):
+    #     login()
+    #     register()
+    # else:
+    #     # 用户已登录，显示应用内容
+    #     get_start()
