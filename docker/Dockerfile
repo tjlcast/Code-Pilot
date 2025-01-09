@@ -1,4 +1,4 @@
-FROM python:3.8.10
+FROM python:3.10.6
 
 # 设置code文件夹是工作目录
 WORKDIR /app/Code-Pilot
