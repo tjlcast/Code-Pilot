@@ -25,6 +25,7 @@ from streamlit_option_menu import option_menu
 from webui.page_openai import page_openai
 from webui.page_prompt import page_prompt, check_user, register_user
 from cg.webui import page_cg
+from webui.page_file_2_md import page_file_2_md
 from webui.web_utils.api_client import ApiRequest
 from webui.web_utils.cg_api_client import create_cg_api_client
 from webui.web_utils.openai_client import OpenAiApiRequest
@@ -58,6 +59,10 @@ def get_start():
         "CG Pilot": {
             "icon": "app-indicator",
             "func": page_cg,
+        },
+        "File_to_MD": {
+            "icon": "folder",
+            "func": page_file_2_md,
         }
     }
 
