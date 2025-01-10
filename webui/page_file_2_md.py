@@ -15,7 +15,7 @@ from markitdown import MarkItDown
 def page_file_2_md(api: ApiRequest = None):
     # 文件上传
     uploaded_file = st.file_uploader(
-        "上传文件", type=["txt", "csv", "pdf", "xlsx", "doc"])
+        "上传文件", type=["txt", "csv", "pdf", "xlsx", "doc", "ppt"])
 
     if uploaded_file is not None:
         # 显示上传的文件内容
