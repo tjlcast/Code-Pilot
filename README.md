@@ -2,7 +2,7 @@
 
 运行
 ``` sh
-nohup ./run_webui.ps1
+nohup ./run_webui.ps1 &
 ```
 
 
