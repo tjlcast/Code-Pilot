@@ -33,7 +33,7 @@ from webui.web_utils.openai_client import OpenAiApiRequest
 
 @st.cache_resource(ttl=10800)  # 3小时过期
 def getOpenApiRequest():
-    return OpenAiApiRequest(base_url=os.environ.get("OPENAI_API_ADDR", "https://api.openai.com"))
+    return OpenAiApiRequest(base_url=os.environ.get("OPENAI_API_ADDR", "http://121.40.102.152:9966"))
 
 
 @st.cache_resource(ttl=10800)  # 3小时过期

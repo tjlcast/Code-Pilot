@@ -36,6 +36,9 @@ def page_openai(api: OpenAiApiRequest):
         )
         openai_chat_box.init_session()
 
+    model_list = ["普通","deepseek-r1"]
+    # model = model_list[0]
+
     with st.sidebar:
         def chat_model_selector():
             dialogue_mode = st.session_state["dialogue_mode"]
@@ -48,17 +51,13 @@ def page_openai(api: OpenAiApiRequest):
                     f"当前运行的模型`{dialogue_mode}`, 您可以开始提问了."
                 )
 
-        dialogue_mode = st.selectbox("请选择对话模式：",
-                                     ["LLM 对话",
-                                      "知识库问答",
-                                      ],
+        dialogue_mode = st.selectbox("请选择对话模型：",
+                                     model_list,
                                      index=0,
                                      key="dialogue_mode",
                                      on_change=chat_model_selector,
                                      )
-
-        if dialogue_mode == "知识库问答":
-            return
+        model = dialogue_mode
 
         # default temperature is 0.7
         temperature = st.slider("Temperature：", 0.0, 1.0, 0.7, 0.05)
@@ -97,7 +96,7 @@ def page_openai(api: OpenAiApiRequest):
         text = ""
         r = api.chat_completion_v1(prompt,
                                    history=history,
-                                   model=os.environ.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
+                                   model=model,
                                    temperature=temperature,
                                    as_json=True,
                                    system_message=system_message)

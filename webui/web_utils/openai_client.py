@@ -34,7 +34,7 @@ class OpenAiApiRequest:
         self.timeout = timeout
         self._use_async = False
         self._client = None
-        key = os.environ.get("OPENAI_API_KEY", "")
+        key = os.environ.get("OPENAI_API_KEY", "xxx")
         self.headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {key}'}
