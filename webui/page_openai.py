@@ -36,7 +36,12 @@ def page_openai(api: OpenAiApiRequest):
         )
         openai_chat_box.init_session()
 
-    model_list = ["普通","deepseek-r1(体验)"]
+    # model_list = ["普通","deepseek-r1(体验)"]
+    model_list = {
+        "普通": "chat",
+        "deepseek-r1(体验)": "deepseek-r1",
+    }
+
     # model = model_list[0]
 
     with st.sidebar:
@@ -48,17 +53,16 @@ def page_openai(api: OpenAiApiRequest):
                 )
             else:
                 st.toast(
-                    f"当前运行的模型`{dialogue_mode}`, 您可以开始提问了."
+                    f"当前运行的模型`{model_list[dialogue_mode]}`, 您可以开始提问了."
                 )
 
         dialogue_mode = st.selectbox("请选择对话模型：",
-                                     model_list,
+                                     model_list.keys(),
                                      index=0,
                                      key="dialogue_mode",
                                      on_change=chat_model_selector,
                                      )
-        dialogue_mode = "deepseek-r1" if dialogue_mode == "deepseek-r1(体验)" else dialogue_mode
-        model = dialogue_mode
+        model = model_list[dialogue_mode]
 
         # default temperature is 0.7
         temperature = st.slider("Temperature：", 0.0, 1.0, 0.7, 0.05)
